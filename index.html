@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Yashi Singh 3D Intro</title>
+<title>Yashi Singh 3D Cyberpunk</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -24,19 +24,20 @@
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;overflow:hidden;}
 body{
-  background:radial-gradient(circle at center, #1a0000 0%, #000 100%);
   font-family:'Share Tech Mono', monospace;color:var(--text);
   display:flex;align-items:center;justify-content:center;perspective:1000px;
+  background:radial-gradient(circle at center, #1a0000 0%, #000 100%);
 }
 
 canvas#matrix{position:fixed;inset:0;z-index:0;display:block;}
+
 .scanlines{position:fixed;inset:0;z-index:1;pointer-events:none;
-  background-image:repeating-linear-gradient(180deg, rgba(255,0,0,0.04) 0px, rgba(255,0,0,0.04) 1px, transparent 1px, transparent 3px);
-  opacity:0.4}
+background-image:repeating-linear-gradient(180deg, rgba(255,0,0,0.04) 0, rgba(255,0,0,0.04) 1px, transparent 1px, transparent 3px);
+opacity:0.4}
+
 .grid{position:fixed;inset:0;z-index:2;pointer-events:none;
-  background-image:linear-gradient(var(--glow) 1px, transparent 1px), linear-gradient(90deg, var(--glow) 1px, transparent 1px);
-  background-size:100px 100px;opacity:0.05;mix-blend-mode:overlay;
-  animation:move 20s linear infinite;}
+background-image:linear-gradient(var(--glow) 1px, transparent 1px), linear-gradient(90deg, var(--glow) 1px, transparent 1px);
+background-size:100px 100px;opacity:0.05;mix-blend-mode:overlay;animation:move 20s linear infinite;}
 @keyframes move{from{background-position:0 0,0 0}to{background-position:100px 100px,100px 100px}}
 
 .card{
@@ -98,10 +99,10 @@ h1 span{animation:flicker 1.8s infinite}
 </style>
 </head>
 <body class="horror-glow">
+
 <canvas id="matrix"></canvas>
 <div class="scanlines"></div>
 <div class="grid"></div>
-
 <button class="theme-toggle">Switch Theme</button>
 
 <div class="card" role="main" aria-label="Profile intro">
@@ -116,42 +117,43 @@ h1 span{animation:flicker 1.8s infinite}
 </div>
 
 <script>
-// MATRIX RAIN
+// MATRIX RAIN - HIGH INTENSITY
 const canvas = document.getElementById('matrix');
 const ctx = canvas.getContext('2d');
 let w = canvas.width = innerWidth;
 let h = canvas.height = innerHeight;
-const fontSize = 16;
-let cols = Math.floor(w / fontSize) + 1;
-let ypos = Array(cols).fill(0);
-let speed = 50;
+const fontSize = 12; // smaller -> more columns
+let cols = Math.floor(w / fontSize);
+let ypos = [];
+for(let i=0;i<cols;i++){ ypos[i] = Math.random()*h; }
 
 function resize(){
-  w = canvas.width = innerWidth; h = canvas.height = innerHeight;
-  cols = Math.floor(w / fontSize) + 1;
-  ypos = Array(cols).fill(0);
+  w = canvas.width = innerWidth;
+  h = canvas.height = innerHeight;
+  cols = Math.floor(w / fontSize);
+  ypos = [];
+  for(let i=0;i<cols;i++) ypos[i] = Math.random()*h;
 }
-addEventListener('resize', resize);
+window.addEventListener('resize', resize);
 
-function matrixTick(){
-  ctx.fillStyle = 'rgba(0,0,0,0.12)';
+function drawMatrix(){
+  ctx.fillStyle = 'rgba(0,0,0,0.1)'; // trail effect
   ctx.fillRect(0,0,w,h);
-  ctx.font = fontSize + 'px "Share Tech Mono", monospace';
-  for(let i=0;i<ypos.length;i++){
-    const text = String.fromCharCode(33 + Math.random() * 94 | 0);
-    const x = i * fontSize;
+  ctx.font = fontSize+'px "Share Tech Mono"';
+  for(let i=0;i<cols;i++){
+    const text = String.fromCharCode(33 + Math.random()*94|0);
     ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--matrix');
-    ctx.fillText(text, x, ypos[i]*fontSize);
-    if(ypos[i]*fontSize > h && Math.random() > 0.975) ypos[i]=0;
-    ypos[i]++;
+    ctx.fillText(text, i*fontSize, ypos[i]);
+    ypos[i] += fontSize + Math.random()*5; // random speed
+    if(ypos[i]>h) ypos[i]=0;
   }
+  requestAnimationFrame(drawMatrix);
 }
-let matrixInterval = setInterval(matrixTick, speed);
+drawMatrix();
 
-// MOUSE + GYRO 3D TILT
+// 3D CARD - MOUSE & GYRO
 const card = document.querySelector('.card');
-let tiltX = 0, tiltY = 0;
-let targetX = 0, targetY = 0;
+let tiltX=0, tiltY=0, targetX=0, targetY=0;
 
 // Mouse
 document.addEventListener('mousemove', e=>{
@@ -162,8 +164,44 @@ document.addEventListener('mousemove', e=>{
   targetY = dx * 15;
 });
 
-// Gyroscope high sensitivity
+// Gyro - high sensitivity
 if(window.DeviceOrientationEvent){
   if(typeof DeviceOrientationEvent.requestPermission === 'function'){
-    DeviceOrientationEvent.requestPermission().then(response=>{
-      if(response==='granted') window.addEventListener
+    DeviceOrientationEvent.requestPermission().then(res=>{
+      if(res==='granted') window.addEventListener('deviceorientation', handleGyro);
+    }).catch(console.error);
+  } else {
+    window.addEventListener('deviceorientation', handleGyro);
+  }
+}
+
+function handleGyro(e){
+  const gamma = e.gamma||0; // left-right
+  const beta = e.beta||0;   // front-back
+  targetY = gamma/90*30;
+  targetX = beta/90*-30;
+}
+
+function animateTilt(){
+  tiltX += (targetX-tiltX)*0.1;
+  tiltY += (targetY-tiltY)*0.1;
+  card.style.transform = `rotateY(${tiltY}deg) rotateX(${tiltX}deg)`;
+  requestAnimationFrame(animateTilt);
+}
+animateTilt();
+
+// Theme toggle
+document.querySelector(".theme-toggle").addEventListener("click", ()=>{
+  if(document.body.dataset.theme==="cyber") document.body.removeAttribute("data-theme");
+  else document.body.dataset.theme="cyber";
+});
+
+// Typewriter
+const subtitle = document.getElementById("subtitle");
+const text = "CyberSecurity Engineer At Amazon Web Services";
+let i=0;
+function typeWriter(){ if(i<text.length){ subtitle.innerHTML+=text.charAt(i); i++; setTimeout(typeWriter,50); } }
+typeWriter();
+</script>
+</body>
+</html>
