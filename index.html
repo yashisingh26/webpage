@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Yashi Singh 3D Intro</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#000000;
+  --accent:#ff0033;
+  --glow:#fffb00;
+  --matrix:#ff2222;
+  --text:#f5f0e6;
+  --card-bg:rgba(15,0,0,0.65);
+}
+[data-theme="cyber"]{
+  --accent:#00ffea;
+  --glow:#39ff14;
+  --matrix:#00ffaa;
+  --card-bg:rgba(0,20,15,0.6);
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{
+  background:radial-gradient(circle at center, #1a0000 0%, #000 100%);
+  font-family:'Share Tech Mono', monospace;color:var(--text);
+  display:flex;align-items:center;justify-content:center;perspective:1000px;
+}
+
+canvas#matrix{position:fixed;inset:0;z-index:0;display:block;}
+.scanlines{position:fixed;inset:0;z-index:1;pointer-events:none;
+  background-image:repeating-linear-gradient(180deg, rgba(255,0,0,0.04) 0px, rgba(255,0,0,0.04) 1px, transparent 1px, transparent 3px);
+  opacity:0.4}
+.grid{position:fixed;inset:0;z-index:2;pointer-events:none;
+  background-image:linear-gradient(var(--glow) 1px, transparent 1px), linear-gradient(90deg, var(--glow) 1px, transparent 1px);
+  background-size:100px 100px;opacity:0.05;mix-blend-mode:overlay;
+  animation:move 20s linear infinite;}
+@keyframes move{from{background-position:0 0,0 0}to{background-position:100px 100px,100px 100px}}
+
+.card{
+  position:relative;z-index:5;
+  background:var(--card-bg);
+  border:1px solid rgba(255,0,0,0.25);
+  padding:2rem 3rem;border-radius:14px;
+  box-shadow:0 0 25px rgba(255,0,0,0.35),0 0 10px rgba(255,255,0,0.15);
+  text-align:center;max-width:680px;
+  backdrop-filter:blur(8px) saturate(140%);
+  transition:transform 0.2s ease;
+  transform-style:preserve-3d;
+}
+
+.avatar{
+  width:120px;height:120px;border-radius:50%;
+  background:url('profile.jpg') center/cover;
+  margin:0 auto 1.5rem;border:2px solid var(--accent);
+  box-shadow:0 0 25px rgba(255,0,0,0.55);
+  transition:transform 0.5s, box-shadow 0.5s;
+  transform-style:preserve-3d;
+}
+.avatar:hover{
+  transform:rotateY(15deg) rotateX(10deg) scale(1.05);
+  box-shadow:0 0 35px var(--accent),0 0 65px var(--glow);
+}
+
+h1{font-family:'Orbitron', sans-serif;font-size:2.2rem;color:var(--accent);margin-bottom:0.5rem;letter-spacing:3px;text-shadow:0 0 10px var(--accent),0 0 20px var(--accent)}
+h2{font-size:1rem;margin-bottom:1.25rem;color:var(--glow);letter-spacing:1px;text-shadow:0 0 5px var(--glow);min-height:20px}
+p{font-size:1rem;line-height:1.45;margin-bottom:1.25rem;color:rgba(245,240,230,0.95)}
+
+.btns{display:flex;justify-content:center;gap:1rem;flex-wrap:wrap}
+.btn{
+  padding:.6rem 1rem;border:1px solid rgba(255,255,0,0.25);
+  border-radius:8px;color:var(--glow);font-family:'Share Tech Mono';
+  cursor:pointer;text-decoration:none;transition:0.3s ease;backdrop-filter:blur(4px);
+  position:relative;overflow:hidden;
+}
+.btn::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(120deg, transparent, var(--accent), transparent);
+  transform:translateX(-100%);
+  transition:0.5s;
+}
+.btn:hover::before{transform:translateX(100%)}
+.btn:hover{color:#fff;box-shadow:0 0 20px var(--accent)}
+
+h1 span{animation:flicker 1.8s infinite}
+@keyframes flicker{0%,18%,22%,25%,53%,57%,100%{opacity:1}20%,24%,55%{opacity:0.3;}}
+
+.theme-toggle{
+  position:fixed;top:15px;right:15px;z-index:10;
+  background:var(--card-bg);color:var(--glow);
+  border:1px solid var(--accent);border-radius:6px;
+  padding:6px 12px;cursor:pointer;
+}
+
+@media (max-width:640px){.card{padding:1.25rem 1.4rem;margin:1rem;width:92%}.avatar{width:96px;height:96px}}
+</style>
+</head>
+<body class="horror-glow">
+<canvas id="matrix"></canvas>
+<div class="scanlines"></div>
+<div class="grid"></div>
+
+<button class="theme-toggle">Switch Theme</button>
+
+<div class="card" role="main" aria-label="Profile intro">
+  <div class="avatar" aria-hidden="true"></div>
+  <h1><span>Yashi Singh</span></h1>
+  <h2 id="subtitle"></h2>
+  <p>Qualification :<strong> B.tech Computer Science</strong>,<strong>M.tech Cybersecurity</strong></p>
+  <div class="btns">
+    <a href="https://github.com/yashisingh26" target="_blank" class="btn">Github</a>
+    <a href="https://www.youtube.com/@cyberyashi25" target="_blank" class="btn">Youtube</a>
+  </div>
+</div>
+
+<script>
+// MATRIX RAIN
+const canvas = document.getElementById('matrix');
+const ctx = canvas.getContext('2d');
+let w = canvas.width = innerWidth;
+let h = canvas.height = innerHeight;
+const fontSize = 16;
+let cols = Math.floor(w / fontSize) + 1;
+let ypos = Array(cols).fill(0);
+let speed = 50;
+
+function resize(){
+  w = canvas.width = innerWidth; h = canvas.height = innerHeight;
+  cols = Math.floor(w / fontSize) + 1;
+  ypos = Array(cols).fill(0);
+}
+addEventListener('resize', resize);
+
+function matrixTick(){
+  ctx.fillStyle = 'rgba(0,0,0,0.12)';
+  ctx.fillRect(0,0,w,h);
+  ctx.font = fontSize + 'px "Share Tech Mono", monospace';
+  for(let i=0;i<ypos.length;i++){
+    const text = String.fromCharCode(33 + Math.random() * 94 | 0);
+    const x = i * fontSize;
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--matrix');
+    ctx.fillText(text, x, ypos[i]*fontSize);
+    if(ypos[i]*fontSize > h && Math.random() > 0.975) ypos[i]=0;
+    ypos[i]++;
+  }
+}
+let matrixInterval = setInterval(matrixTick, speed);
+
+// Mouse + Gyro 3D PARALLAX
+const card = document.querySelector('.card');
+let tiltX=0, tiltY=0;
+
+// Mouse
+document.addEventListener('mousemove', e=>{
+  const cx = innerWidth/2, cy = innerHeight/2;
+  const dx = (e.clientX - cx)/cx;
+  const dy = (e.clientY - cy)/cy;
+  tiltX = dy * -15;
+  tiltY = dx * 15;
+  applyTransform();
+});
+
+// Gyroscope (mobile)
+if(window.DeviceOrientationEvent){
+  window.addEventListener('deviceorientation', event=>{
+    const gamma = event.gamma || 0; 
+    const beta = event.beta || 0; 
+    tiltY = gamma/90*15;
+    tiltX = beta/90*-15;
+    applyTransform();
+  });
+}
+
+function applyTransform(){
+  card.style.transform = `rotateY(${tiltY}deg) rotateX(${tiltX}deg) translateZ(0)`;
+}
+
+// Theme toggle
+document.querySelector(".theme-toggle").addEventListener("click", ()=>{
+  if(document.body.dataset.theme==="cyber") document.body.removeAttribute("data-theme");
+  else document.body.dataset.theme="cyber";
+});
+
+// Typewriter effect
+const subtitle = document.getElementById("subtitle");
+const text = "CyberSecurity Engineer At Amazon Web Services";
+let i=0;
+function typeWriter(){
+  if(i < text.length){
+    subtitle.innerHTML += text.charAt(i);
+    i++;
+    setTimeout(typeWriter, 60);
+  }
+}
+typeWriter();
+
+// Mouse wheel speed control for matrix
+document.addEventListener("wheel", e=>{
+  if(e.deltaY < 0 && speed>10) speed-=5;
+  if(e.deltaY > 0 && speed<200) speed+=5;
+  clearInterval(matrixInterval);
+  matrixInterval = setInterval(matrixTick, speed);
+});
+</script>
+</body>
+</html>
