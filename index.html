@@ -148,64 +148,22 @@ function matrixTick(){
 }
 let matrixInterval = setInterval(matrixTick, speed);
 
-// Mouse + Gyro 3D PARALLAX
+// MOUSE + GYRO 3D TILT
 const card = document.querySelector('.card');
-let tiltX=0, tiltY=0;
+let tiltX = 0, tiltY = 0;
+let targetX = 0, targetY = 0;
 
 // Mouse
 document.addEventListener('mousemove', e=>{
   const cx = innerWidth/2, cy = innerHeight/2;
   const dx = (e.clientX - cx)/cx;
   const dy = (e.clientY - cy)/cy;
-  tiltX = dy * -15;
-  tiltY = dx * 15;
-  applyTransform();
+  targetX = dy * -15;
+  targetY = dx * 15;
 });
 
-// Gyroscope (mobile) - High Sensitivity
+// Gyroscope high sensitivity
 if(window.DeviceOrientationEvent){
-  window.addEventListener('deviceorientation', event=>{
-    const gamma = event.gamma || 0; 
-    const beta = event.beta || 0; 
-    // High sensitivity multipliers
-    tiltY = gamma/90 * 30;  // previous 15 -> now 30
-    tiltX = beta/90 * -30;  // previous -15 -> now -30
-    applyTransform();
-  });
-}
-
-
-function applyTransform(){
-  card.style.transform = `rotateY(${tiltY}deg) rotateX(${tiltX}deg) translateZ(0)`;
-}
-
-// Theme toggle
-document.querySelector(".theme-toggle").addEventListener("click", ()=>{
-  if(document.body.dataset.theme==="cyber") document.body.removeAttribute("data-theme");
-  else document.body.dataset.theme="cyber";
-});
-
-// Typewriter effect
-const subtitle = document.getElementById("subtitle");
-const text = "CyberSecurity Engineer At Amazon Web Services";
-let i=0;
-function typeWriter(){
-  if(i < text.length){
-    subtitle.innerHTML += text.charAt(i);
-    i++;
-    setTimeout(typeWriter, 60);
-  }
-}
-typeWriter();
-
-// Mouse wheel speed control for matrix
-document.addEventListener("wheel", e=>{
-  if(e.deltaY < 0 && speed>10) speed-=5;
-  if(e.deltaY > 0 && speed<200) speed+=5;
-  clearInterval(matrixInterval);
-  matrixInterval = setInterval(matrixTick, speed);
-});
-</script>
-</body>
-</html>
-
+  if(typeof DeviceOrientationEvent.requestPermission === 'function'){
+    DeviceOrientationEvent.requestPermission().then(response=>{
+      if(response==='granted') window.addEventListener
