@@ -162,16 +162,18 @@ document.addEventListener('mousemove', e=>{
   applyTransform();
 });
 
-// Gyroscope (mobile)
+// Gyroscope (mobile) - High Sensitivity
 if(window.DeviceOrientationEvent){
   window.addEventListener('deviceorientation', event=>{
     const gamma = event.gamma || 0; 
     const beta = event.beta || 0; 
-    tiltY = gamma/90*15;
-    tiltX = beta/90*-15;
+    // High sensitivity multipliers
+    tiltY = gamma/90 * 30;  // previous 15 -> now 30
+    tiltX = beta/90 * -30;  // previous -15 -> now -30
     applyTransform();
   });
 }
+
 
 function applyTransform(){
   card.style.transform = `rotateY(${tiltY}deg) rotateX(${tiltX}deg) translateZ(0)`;
@@ -206,3 +208,4 @@ document.addEventListener("wheel", e=>{
 </script>
 </body>
 </html>
+
